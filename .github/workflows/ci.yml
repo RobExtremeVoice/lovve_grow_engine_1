@@ -18,7 +18,9 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Match local dev and the always-on worker host. Prisma 7 / Next 16
+          # require Node 20.19+, 22.12+, or 24+.
+          node-version: "24"
           cache: npm
 
       - name: Install dependencies

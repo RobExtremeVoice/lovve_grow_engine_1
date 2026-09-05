@@ -66,15 +66,25 @@ export interface ProcessMessageJob {
   senderId: string;
 }
 
+// Infrastructure smoke test. Carries no Instagram data — the worker just writes
+// an OperationalEvent row, which exercises the full API -> Redis -> worker -> DB
+// path. Enqueued by `scripts/smoke-job.ts` and safe to run in production.
+export interface ProcessHealthcheckJob {
+  nonce: string;
+  enqueuedAt: string;
+}
+
 export type DmQueueJob =
   | ProcessCommentJob
   | ProcessPostbackJob
   | ProcessFollowUpJob
-  | ProcessMessageJob;
+  | ProcessMessageJob
+  | ProcessHealthcheckJob;
 
 export const POSTBACK_JOB_NAME = "process-postback";
 export const FOLLOWUP_JOB_NAME = "process-followup";
 export const MESSAGE_JOB_NAME = "process-message";
+export const HEALTHCHECK_JOB_NAME = "healthcheck";
 
 let dmQueue: Queue<DmQueueJob> | null = null;
 

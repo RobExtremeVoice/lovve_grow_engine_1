@@ -9,6 +9,11 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Migrations need a direct (non-pooled) connection. With Supabase, set
+    // DIRECT_URL to the port-5432 connection string and leave DATABASE_URL as
+    // the pooled (port-6543) one the app runtime uses. DIRECT_URL is optional:
+    // unset, the CLI falls back to DATABASE_URL, which is correct for a plain
+    // Postgres (local, Railway) with no pooler in front.
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });
