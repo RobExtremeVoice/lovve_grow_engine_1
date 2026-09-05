@@ -1,14 +1,16 @@
 import type { MetadataRoute } from "next";
+import { getBrandName } from "@/lib/brand";
 
-// Lets a self-hosted instance be installed to the home screen: on iOS via
-// Share -> "Add to Home Screen", on Android through the install prompt. It then
-// opens standalone, without browser chrome, which makes checking campaigns from
-// a phone practical.
+// Lets the instance be installed to the home screen: on iOS via Share -> "Add
+// to Home Screen", on Android through the install prompt. It then opens
+// standalone, without browser chrome, which makes checking campaigns from a
+// phone practical.
 export default function manifest(): MetadataRoute.Manifest {
+  const brandName = getBrandName();
   return {
-    name: "OpenReply",
-    short_name: "OpenReply",
-    description: "Instagram comment-to-DM automation",
+    name: brandName,
+    short_name: brandName,
+    description: "Instagram growth & comment-to-DM automation",
     start_url: "/overview",
     display: "standalone",
     orientation: "portrait",

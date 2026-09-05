@@ -8,27 +8,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { t, type Locale, type MessageKey } from "@/lib/i18n";
 
-const navItems = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Overview", href: "/overview" },
-  { label: "Inbox", href: "/inbox" },
-  { label: "Campaigns", href: "/campaigns" },
-  { label: "DM Logs", href: "/logs" },
-  { label: "Settings", href: "/settings" },
-  { label: "Diagnostics", href: "/diagnostics" },
+const navItems: { key: MessageKey; href: string }[] = [
+  { key: "navDashboard", href: "/dashboard" },
+  { key: "navOverview", href: "/overview" },
+  { key: "navInbox", href: "/inbox" },
+  { key: "navCampaigns", href: "/campaigns" },
+  { key: "navLogs", href: "/logs" },
+  { key: "navSettings", href: "/settings" },
+  { key: "navDiagnostics", href: "/diagnostics" },
 ];
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   workspaceName: string;
+  brandName: string;
+  locale: Locale;
 }
 
 export default function Sidebar({
   isOpen,
   onClose,
   workspaceName,
+  brandName,
+  locale,
 }: SidebarProps) {
   const pathname = usePathname();
 
@@ -57,7 +62,7 @@ export default function Sidebar({
           style={{ paddingTop: "calc(1.25rem + env(safe-area-inset-top))" }}
         >
           <Link href="/dashboard" className="text-base font-semibold">
-            OpenReply
+            {brandName}
           </Link>
         </div>
 
@@ -80,7 +85,7 @@ export default function Sidebar({
                   }
                 `}
               >
-                {item.label}
+                {t(item.key, locale)}
               </Link>
             );
           })}
@@ -88,7 +93,7 @@ export default function Sidebar({
 
         <div className="px-5 py-4 border-t border-border">
           <p className="text-sm text-foreground truncate">{workspaceName}</p>
-          <p className="text-xs text-muted">Self-hosted</p>
+          <p className="text-xs text-muted">{t("privateInstanceLabel", locale)}</p>
         </div>
       </aside>
     </>

@@ -1,32 +1,34 @@
 import type { Metadata } from "next";
 import LegalShell from "@/components/legal-shell";
+import { getBrandName } from "@/lib/brand";
+
+const brandName = getBrandName();
 
 export const metadata: Metadata = {
-  title: "Meta App Review Support - OpenReply",
-  description:
-    "Meta App Review notes for OpenReply's official Instagram private reply workflow.",
+  title: `${brandName} — Meta App Review Support`,
+  description: `Meta App Review notes for the official Instagram private reply workflow in ${brandName}.`,
 };
 
 export default function MetaReviewPage() {
   return (
     <LegalShell
       title="Meta App Review Support"
-      description="OpenReply is designed for Instagram professional accounts that want to send private replies after keyword comments on their own posts or reels."
+      description={`${brandName} is designed for an Instagram professional account that wants to send private replies after keyword comments on its own posts or reels.`}
       updatedAt="May 24, 2026"
     >
       <section>
-        <h2 className="text-xl font-bold text-white">User Flow</h2>
+        <h2 className="text-xl font-bold text-foreground">User Flow</h2>
         <p className="mt-3">
           A business owner signs in by email, connects an Instagram professional
           account through Meta OAuth, creates a keyword campaign for a post or
-          reel, and receives a webhook when someone comments. OpenReply queues
+          reel, and receives a webhook when someone comments. {brandName} queues
           the event, deduplicates it, checks rate limits, then sends a private
           reply using the comment ID.
         </p>
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-white">Compliance Position</h2>
+        <h2 className="text-xl font-bold text-foreground">Compliance Position</h2>
         <p className="mt-3">
           The app uses official Meta APIs, verifies webhook signatures, encrypts
           tokens, avoids scraping, avoids password collection, and sends no more
@@ -35,7 +37,7 @@ export default function MetaReviewPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-white">Review Test Notes</h2>
+        <h2 className="text-xl font-bold text-foreground">Review Test Notes</h2>
         <p className="mt-3">
           Reviewers can use a Meta test business, connect an Instagram
           professional account, create a keyword such as LINK, comment that

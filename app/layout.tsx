@@ -1,22 +1,25 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { getBrandName } from "@/lib/brand";
 import "./globals.css";
 
+const brandName = getBrandName();
+
 export const metadata: Metadata = {
-  title: "OpenReply - Open source Instagram comment-to-DM automation",
+  title: `${brandName} - Instagram growth & comment-to-DM automation`,
   description:
-    "A free, self-hosted ManyChat alternative. Send an Instagram DM automatically when someone comments a keyword on your post or reel, using the official Meta API.",
+    "Private Instagram growth engine: turns keyword comments, DMs, and Story replies into automated conversations, follow-gated offers, referrals, and tracked links, using the official Meta API.",
   keywords: [
     "instagram automation",
     "comment to DM",
     "instagram private replies",
-    "social commerce",
-    "manychat alternative",
+    "instagram growth",
+    "referral program",
   ],
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "OpenReply",
+    title: brandName,
     statusBarStyle: "black-translucent",
   },
   icons: {

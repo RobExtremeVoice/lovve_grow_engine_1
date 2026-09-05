@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
-/* ManyChat Alternative — Design System
-   Plain and functional. No gradients, glass, glow, or animation. */
+/* Lovve Growth Engine — Design System
+   Plain and functional. No gradients, glass, glow, or animation.
+   Accent is Lovve rose; override the tokens below to re-skin. */
 
 @theme inline {
   --color-background: #ffffff;
@@ -11,8 +12,8 @@
   --color-border: #e4e4e7;
   --color-border-hover: #d4d4d8;
   --color-muted: #71717a;
-  --color-accent: #f97316;
-  --color-accent-hover: #ea580c;
+  --color-accent: #e11d63;
+  --color-accent-hover: #be123c;
   --color-success: #16a34a;
   --color-error: #dc2626;
   --color-warning: #d97706;
