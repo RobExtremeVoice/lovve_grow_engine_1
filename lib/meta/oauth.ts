@@ -74,12 +74,26 @@ export function verifyOAuthState(state: string | null): OAuthStatePayload | null
   }
 }
 
+/**
+ * Instagram Login permissions this app requests at authorize time. Must line up
+ * with the products enabled on the Meta app and the App Review submission:
+ * - instagram_business_basic          — identify the connected account
+ * - instagram_business_manage_messages — send the one-time private reply / DM
+ * - instagram_business_manage_comments — read comment webhooks, post public replies
+ * - instagram_business_manage_insights — daily follower snapshots (reports)
+ */
+export const INSTAGRAM_OAUTH_SCOPES = [
+  "instagram_business_basic",
+  "instagram_business_manage_messages",
+  "instagram_business_manage_comments",
+  "instagram_business_manage_insights",
+] as const;
+
 export function getAuthorizationUrl(redirectUri: string, state: string): string {
   const params = new URLSearchParams({
     client_id: requireEnv("INSTAGRAM_APP_ID"),
     redirect_uri: redirectUri,
-    scope:
-      "instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_manage_insights",
+    scope: INSTAGRAM_OAUTH_SCOPES.join(","),
     response_type: "code",
     state,
   });

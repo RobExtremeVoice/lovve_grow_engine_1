@@ -349,3 +349,50 @@ itself (Supabase, Upstash, Railway, Vercel) is operator work — see the runbook
   services, Vercel domains — runbook §2–§5.
 - External uptime alerting on `/api/health` — runbook §8; formalized in
   Sprint 18.
+
+---
+
+## 12. Sprint 3 — Meta App / Instagram (recorded 2026-09-07)
+
+The Instagram integration is inherited from OpenReply and unchanged in
+substance. Sprint 3 is Meta-console setup (operator work) plus repo-side
+support and test coverage for the acceptance criteria. Runbook:
+**[docs/lovve-meta-app.md](lovve-meta-app.md)**.
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | pass |
+| `npm run lint` | pass |
+| `npm test` | **234 passed** / 23 files |
+| `npm run build` | pass |
+
+### What changed
+
+- **`lib/meta/oauth.ts`** — extracted `INSTAGRAM_OAUTH_SCOPES` (was an inline
+  string). No behaviour change; now testable and reused by `check:meta`.
+- **`lib/meta/client.ts`** — extracted `WEBHOOK_SUBSCRIBED_FIELDS`
+  (`["comments", "messages"]`). Same value, single source of truth.
+- **`scripts/check-meta-config.ts`** / `npm run check:meta` — prints the exact
+  redirect URI, webhook URL, scopes, subscribed fields, and App Review URLs to
+  paste into the Meta console, and validates the Meta env vars. No network, no
+  secret values printed. Exits non-zero on a problem.
+- **`META_APP_REVIEW.md`** — added `instagram_business_manage_insights` (the
+  code requests it for follower snapshots) with its justification; screencast
+  updated to the Lovve `LOVE15` flow.
+- Tests: `oauth.test.ts` +3 (state expiry, null/malformed state, scope set);
+  new `webhook-route.test.ts` (verify challenge, bad-signature 401 + WARNING
+  event, duplicate comment → identical deterministic `jobId`, non-instagram
+  object → 200 + no enqueue).
+
+### Not done here (operator)
+
+- Creating the test Meta app and the production Meta app, configuring redirect
+  URI / webhook / scopes, tester-invite dance, publishing, App Review,
+  connecting `@lovve.brazilian.store` — runbook §1–§6.
+
+### Consistency note
+
+The OAuth redirect URI and webhook URL are built from `NEXTAUTH_URL`
+(`lib/env.ts` → `getBaseUrl`), **not** `APP_BASE_URL`. `APP_BASE_URL` (Sprint 1)
+is branding/informational only. Keep `NEXTAUTH_URL` set to the canonical public
+domain that is registered in the Meta console.
