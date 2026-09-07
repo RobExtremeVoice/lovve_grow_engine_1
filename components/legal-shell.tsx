@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getBrandName } from "@/lib/brand";
 
 interface LegalShellProps {
   title: string;
@@ -17,8 +18,10 @@ export default function LegalShell({
     <main className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="text-lg font-bold text-foreground">OpenReply</span>
+          <Link href="/login" className="flex items-center gap-3">
+            <span className="text-lg font-bold text-foreground">
+              {getBrandName()}
+            </span>
           </Link>
           <Link
             href="/login"

@@ -7,31 +7,37 @@
  */
 
 import { usePathname } from "next/navigation";
+import { t, type Locale, type MessageKey } from "@/lib/i18n";
 
-const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/campaigns": "Campaigns",
-  "/campaigns/new": "New Campaign",
-  "/automations": "Campaigns",
-  "/automations/new": "New Campaign",
-  "/logs": "DM Logs",
-  "/settings": "Settings",
-  "/diagnostics": "Diagnostics",
+const pageTitles: Record<string, MessageKey> = {
+  "/dashboard": "navDashboard",
+  "/campaigns": "navCampaigns",
+  "/campaigns/new": "newCampaign",
+  "/automations": "navCampaigns",
+  "/automations/new": "newCampaign",
+  "/logs": "navLogs",
+  "/settings": "navSettings",
+  "/diagnostics": "navDiagnostics",
+  "/overview": "navOverview",
+  "/inbox": "navInbox",
 };
 
 interface TopBarProps {
   onMenuClick: () => void;
   instagramUsername: string | null;
   instagramAccountCount: number;
+  locale: Locale;
 }
 
 export default function TopBar({
   onMenuClick,
   instagramUsername,
   instagramAccountCount,
+  locale,
 }: TopBarProps) {
   const pathname = usePathname();
-  const title = pageTitles[pathname] ?? "Dashboard";
+  const titleKey = pageTitles[pathname] ?? "navDashboard";
+  const title = t(titleKey, locale);
 
   return (
     <header
@@ -50,7 +56,7 @@ export default function TopBar({
           className="lg:hidden shrink-0 px-2.5 py-1.5 rounded border border-border text-sm text-muted hover:text-foreground"
           aria-label="Toggle sidebar"
         >
-          Menu
+          {t("menu", locale)}
         </button>
         <h1 className="truncate text-base font-semibold sm:text-lg">{title}</h1>
       </div>
@@ -67,8 +73,8 @@ export default function TopBar({
           className="shrink-0 whitespace-nowrap text-sm font-medium px-3 py-1.5 rounded bg-accent text-white hover:bg-accent-hover"
         >
           {/* Full label needs more room than a 360px header has to spare. */}
-          <span className="sm:hidden">Connect</span>
-          <span className="hidden sm:inline">Connect Instagram</span>
+          <span className="sm:hidden">{t("connect", locale)}</span>
+          <span className="hidden sm:inline">{t("connectInstagram", locale)}</span>
         </a>
       )}
     </header>

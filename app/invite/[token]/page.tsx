@@ -4,18 +4,22 @@ import { notFound } from "next/navigation";
 import InvitationAcceptCard from "@/components/invitation-accept-card";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/client";
+import { getBrandName } from "@/lib/brand";
+import { t } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n-server";
 
 type InvitePageProps = {
   params: Promise<{ token: string }>;
 };
 
 export const metadata: Metadata = {
-  title: "Accept Workspace Invitation - OpenReply",
+  title: `${getBrandName()} — Accept workspace invitation`,
   robots: { index: false, follow: false },
 };
 
 export default async function InvitePage({ params }: InvitePageProps) {
   const { token } = await params;
+  const locale = await getRequestLocale();
   const [session, invitation] = await Promise.all([
     auth(),
     prisma.workspaceInvitation.findUnique({
@@ -35,12 +39,12 @@ export default async function InvitePage({ params }: InvitePageProps) {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center px-5 py-12">
-        <Link href="/" className="mb-8 text-sm font-bold text-cyan-100">
-          OpenReply
+        <Link href="/login" className="mb-8 text-sm font-bold text-accent">
+          {getBrandName()}
         </Link>
         <section className="border border-white/10 bg-white/[0.035] p-8">
-          <p className="text-xs font-semibold uppercase tracking-wide text-cyan-100">
-            Workspace invitation
+          <p className="text-xs font-semibold uppercase tracking-wide text-accent">
+            {t("workspaceInvitation", locale)}
           </p>
           <h1 className="mt-4 text-3xl font-black leading-tight text-white">
             Join {invitation.workspace.name}

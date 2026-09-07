@@ -1,10 +1,13 @@
 import { EMAIL_PROVIDER_ID, signIn } from "@/lib/auth";
 import { getCampaignTemplate } from "@/lib/templates/campaign-templates";
 import { DemoNotice } from "@/components/demo-notice";
+import { getBrandName } from "@/lib/brand";
+import { t } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n-server";
 
 export const metadata = {
-  title: "Login - OpenReply",
-  description: "Sign in to manage Instagram comment-to-DM campaigns.",
+  title: `${getBrandName()} — Sign in`,
+  description: "Sign in to manage Instagram growth campaigns.",
 };
 
 export default async function LoginPage({
@@ -17,6 +20,8 @@ export default async function LoginPage({
   }>;
 }) {
   const params = await searchParams;
+  const locale = await getRequestLocale();
+  const brandName = getBrandName();
   const checkEmail = params.checkEmail === "1";
   const selectedTemplate = getCampaignTemplate(params.template);
   const templateCallbackUrl = selectedTemplate
@@ -37,12 +42,12 @@ export default async function LoginPage({
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-foreground">
-            OpenReply
+            {brandName}
           </h1>
           <p className="text-muted text-sm leading-relaxed mt-2">
             {selectedTemplate
               ? `Sign in to use the ${selectedTemplate.title} template.`
-              : "Sign in by email, then connect your Instagram professional account."}
+              : t("signInSubtitle", locale)}
           </p>
         </div>
 
@@ -62,11 +67,10 @@ export default async function LoginPage({
 
           {checkEmail ? (
             <div className="text-center py-4">
-              <h2 className="text-lg font-semibold mb-2">Check your email</h2>
-              <p className="text-sm text-muted">
-                We sent you a secure sign-in link. Open it on this device to
-                continue.
-              </p>
+              <h2 className="text-lg font-semibold mb-2">
+                {t("checkEmailHeading", locale)}
+              </h2>
+              <p className="text-sm text-muted">{t("checkEmailBody", locale)}</p>
             </div>
           ) : (
             <form action={sendMagicLink} className="space-y-5">
@@ -75,7 +79,7 @@ export default async function LoginPage({
                   htmlFor="email"
                   className="block text-sm font-medium text-foreground"
                 >
-                  Work email
+                  {t("workEmailLabel", locale)}
                 </label>
                 <input
                   id="email"
@@ -83,7 +87,7 @@ export default async function LoginPage({
                   type="email"
                   required
                   autoComplete="email"
-                  placeholder="you@company.com"
+                  placeholder={t("emailPlaceholder", locale)}
                   className="w-full px-4 py-3 rounded bg-surface border border-border text-sm text-foreground placeholder:text-zinc-500 focus:border-accent/40 focus:outline-none transition-colors"
                 />
               </div>
@@ -92,7 +96,7 @@ export default async function LoginPage({
                 type="submit"
                 className="w-full inline-flex items-center justify-center gap-2 rounded bg-accent px-6 py-3.5 text-sm font-semibold text-white shadow-indigo-500/25 transition-all hover:shadow-indigo-500/30"
               >
-                Email me a magic link
+                {t("sendMagicLink", locale)}
               </button>
             </form>
           )}

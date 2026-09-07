@@ -3,6 +3,8 @@ import DashboardShell from "@/components/dashboard-shell";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/client";
 import { ensureWorkspaceForUser } from "@/lib/workspace";
+import { getBrandName } from "@/lib/brand";
+import { getRequestLocale } from "@/lib/i18n-server";
 
 export default async function DashboardLayout({
   children,
@@ -25,11 +27,15 @@ export default async function DashboardLayout({
     select: { username: true },
   });
 
+  const locale = await getRequestLocale();
+
   return (
     <DashboardShell
       workspaceName={workspace.name}
       instagramUsername={accounts[0]?.username ?? null}
       instagramAccountCount={accounts.length}
+      brandName={getBrandName()}
+      locale={locale}
     >
       {children}
     </DashboardShell>

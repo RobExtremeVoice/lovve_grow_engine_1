@@ -175,12 +175,28 @@ if (isFeatureEnabled("newFollowerOffer")) { /* Lovve path */ }
 No runtime code branches on these yet. Per-workspace / per-account overrides can
 layer on later, using the env value as the default.
 
-### Other planned env vars (not added until their sprint)
+### Branding & instance env vars (Sprint 1 — `lib/brand.ts`)
 
-`APP_BRAND_NAME`, `APP_BASE_URL` (Sprint 1); `LIGHTSPEED_*`,
-`DEFAULT_NEW_FOLLOWER_DISCOUNT_PERCENT`, `DEFAULT_OFFER_EXPIRY_HOURS`,
-`DEFAULT_REFERRER_CREDIT_CENTS` (Sprints 6/8). Real values never go in
-`.env.example`.
+| Var | Default | Effect |
+| --- | --- | --- |
+| `APP_BRAND_NAME` | `Lovve Growth Engine` | Visible product name in titles, manifest, wordmarks, legal copy. **Set at build time** — legal pages are statically prerendered and bake the value in. |
+| `APP_BASE_URL` | `NEXTAUTH_URL` → localhost | Canonical public origin (e.g. `https://growth.lovvestore.com`). |
+| `APP_PRIVATE_INSTANCE` | `false` | When truthy, `proxy.ts` hides the public marketing/SEO surface and redirects `/` into the app. Meta-review pages stay public. |
+
+### Still-planned env vars (not added until their sprint)
+
+`LIGHTSPEED_*`, `DEFAULT_NEW_FOLLOWER_DISCOUNT_PERCENT`,
+`DEFAULT_OFFER_EXPIRY_HOURS`, `DEFAULT_REFERRER_CREDIT_CENTS` (Sprints 6/8).
+Real values never go in `.env.example`.
+
+### Internationalization (Sprint 1 — `lib/i18n.ts`)
+
+Lightweight EN/PT dictionary (`t(key, locale)`), not a framework. Locale
+resolves from a `locale` cookie, then `Accept-Language`, then English
+(`getRequestLocale()` server helper). Covers sign-in, verify, invite, and the
+dashboard nav/top bar. Widen the key set (or graduate to a framework) as the
+localized surface grows. `<html lang>` stays `en` to keep the root layout
+statically rendered; per-request pages render the correct locale strings.
 
 ---
 
@@ -232,3 +248,63 @@ Changes in Sprint 0 (no runtime behaviour change):
 - Added this document.
 - CI already covered typecheck/lint/test/build — left as-is.
 - Verified no secrets are tracked (`.env*` is gitignored except `.env.example`).
+
+---
+
+## 10. Sprint 1 — Rebranding & private configuration (recorded 2026-09-05)
+
+Configurable rebrand to the Lovve Growth Engine. No message, follow-gate, or
+schema changes.
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | pass |
+| `npm run lint` | pass |
+| `npm test` | **220 passed** / 21 files |
+| `npm run build` | pass |
+
+### What changed
+
+- **`lib/brand.ts`** — `getBrandName()`, `getAppBaseUrl()`, `isPrivateInstance()`.
+- **`lib/i18n.ts`** — EN/PT dictionary + locale resolution (see §6).
+- **Wordmark / metadata** now read `getBrandName()`: `app/layout.tsx`,
+  `app/manifest.ts`, `components/sidebar.tsx`, `components/legal-shell.tsx`,
+  `components/dashboard-shell.tsx` + `components/top-bar.tsx` (threaded
+  `brandName` / `locale` props from `app/(dashboard)/layout.tsx`), `app/login`,
+  `app/verify-request`, `app/invite/[token]`, `app/reports/[shareSlug]`, and the
+  four Meta pages (`privacy`, `terms`, `data-deletion`, `meta-review`).
+- **Palette** — `app/globals.css` accent tokens → Lovve rose (`#e11d63` /
+  `#be123c`). All other tokens unchanged. Fixed invisible `text-white` headings
+  on the (light-background) legal pages → `text-foreground`.
+- **`proxy.ts`** — widened the auth matcher to every `(dashboard)` route;
+  added `APP_PRIVATE_INSTANCE` gating that redirects `/` and the marketing/SEO
+  routes (`/manychat-alternative`, `/comment-link-automation`,
+  `/instagram-comment-to-dm-templates`, `/instagram-dm-automation-agencies`,
+  `/templates`) into the app. `/privacy`, `/terms`, `/data-deletion`,
+  `/meta-review`, `/invite/*`, `/r/*`, `/reports/*`, `/api/*` stay public.
+- **`ALLOWED_EMAILS`** — already enforced in `lib/auth.ts` (`signIn` callback,
+  runs before the magic link is sent and again on verify). No change; covered by
+  `__tests__/env.test.ts`.
+- Tests: `__tests__/brand.test.ts`, `__tests__/i18n.test.ts`,
+  `__tests__/proxy.test.ts`.
+
+### Deliberately NOT rebranded
+
+- `lib/import-queue.ts` queue keys (`openreply-import-queue`) — renaming would
+  strand in-flight jobs across a deploy.
+- `lib/auth.ts` `EMAIL_FROM` fallback string — it is only a fallback; set
+  `EMAIL_FROM` per deployment.
+- `components/demo-notice.tsx` — only renders on `openreply.diwen.dev`; inert
+  everywhere else.
+- `lib/seo-pages.ts` and `components/seo-page-shell.tsx` copy — the pages that
+  use them are hidden on a private instance.
+
+### Manual steps
+
+- Set `APP_BRAND_NAME`, `APP_BASE_URL`, `APP_PRIVATE_INSTANCE=true` in the
+  staging/production env panels (build-time for `APP_BRAND_NAME`).
+- **Replace the app icons** — still the OpenReply mark. Drop Lovve PNGs over:
+  `public/icon-192.png` (192×192), `public/icon-512.png` (512×512, also used
+  maskable), `public/apple-touch-icon.png` (180×180). Optionally add
+  `app/favicon.ico`. No code change needed; filenames are referenced from
+  `app/layout.tsx` and `app/manifest.ts`.

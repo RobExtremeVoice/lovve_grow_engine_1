@@ -3,12 +3,15 @@
 import { useState } from "react";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/top-bar";
+import type { Locale } from "@/lib/i18n";
 
 interface DashboardShellProps {
   children: React.ReactNode;
   workspaceName: string;
   instagramUsername: string | null;
   instagramAccountCount: number;
+  brandName: string;
+  locale: Locale;
 }
 
 export default function DashboardShell({
@@ -16,6 +19,8 @@ export default function DashboardShell({
   workspaceName,
   instagramUsername,
   instagramAccountCount,
+  brandName,
+  locale,
 }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -27,6 +32,8 @@ export default function DashboardShell({
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         workspaceName={workspaceName}
+        brandName={brandName}
+        locale={locale}
       />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -34,6 +41,7 @@ export default function DashboardShell({
           onMenuClick={() => setSidebarOpen(true)}
           instagramUsername={instagramUsername}
           instagramAccountCount={instagramAccountCount}
+          locale={locale}
         />
 
         {/* overflow-x-hidden: enabling vertical scrolling makes the browser
