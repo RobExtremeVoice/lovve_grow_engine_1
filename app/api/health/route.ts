@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { getDMQueue, getRedisConnection } from "@/lib/queue/client";
 import { getWorkerHealth } from "@/lib/ops/worker-health";
+import { redactDetail, redactSecrets } from "@/lib/ops/redact";
 
 export const runtime = "nodejs";
 // Health must reflect live state (worker heartbeat, queue depth), never a
@@ -75,14 +76,20 @@ export async function GET() {
     queue.status === "ok" &&
     worker.healthy;
 
+  // /api/health is unauthenticated, so no check detail may carry a credential.
+  const workerSafe =
+    "error" in worker && typeof worker.error === "string"
+      ? { ...worker, error: redactSecrets(worker.error) }
+      : worker;
+
   return NextResponse.json(
     {
       status: healthy ? "ok" : "degraded",
       checks: {
-        database,
-        redis,
-        queue,
-        worker,
+        database: redactDetail(database),
+        redis: redactDetail(redis),
+        queue: redactDetail(queue),
+        worker: workerSafe,
       },
     },
     { status: healthy ? 200 : 503 }

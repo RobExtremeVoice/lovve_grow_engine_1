@@ -308,3 +308,44 @@ schema changes.
   maskable), `public/apple-touch-icon.png` (180×180). Optionally add
   `app/favicon.ico`. No code change needed; filenames are referenced from
   `app/layout.tsx` and `app/manifest.ts`.
+
+---
+
+## 11. Sprint 2 — Infrastructure (recorded 2026-09-05)
+
+Repo-side enablement for the staging/production build-out. The provisioning
+itself (Supabase, Upstash, Railway, Vercel) is operator work — see the runbook
+**[docs/lovve-infrastructure.md](lovve-infrastructure.md)**.
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | pass |
+| `npm run lint` | pass |
+| `npm test` | **226 passed** / 22 files |
+| `npm run build` | pass |
+
+### What changed
+
+- **`prisma.config.ts`** — migrations now use `DIRECT_URL` when set, falling
+  back to `DATABASE_URL`. Lets `DATABASE_URL` be a pooled (Supabase 6543) URL
+  for the serverless runtime while `prisma migrate` uses a direct connection.
+  Optional; unset = unchanged behaviour.
+- **Job round-trip smoke test** — new `healthcheck` BullMQ job
+  (`HEALTHCHECK_JOB_NAME`, `ProcessHealthcheckJob`) processed by
+  `processHealthcheckJob` in `lib/queue/dm-worker.ts` (writes one
+  `OperationalEvent`, no Instagram calls). Driven by `scripts/smoke-job.ts` /
+  `npm run smoke:job`. Exercises API → Redis → worker → DB.
+- **`/api/health` secret redaction** — `lib/ops/redact.ts` scrubs connection
+  strings and `key=value` secrets from every check `detail`/`error` before the
+  (unauthenticated) response is sent.
+- **CI** — Node bumped `20` → `24` to match local dev and the worker host.
+- `.env.example` — `DIRECT_URL` documented.
+- Tests: `__tests__/redact.test.ts`; `dm-worker.test.ts` mock extended for the
+  new export.
+
+### Not done here (operator / later)
+
+- Creating the Supabase production project, Upstash databases, Railway
+  services, Vercel domains — runbook §2–§5.
+- External uptime alerting on `/api/health` — runbook §8; formalized in
+  Sprint 18.

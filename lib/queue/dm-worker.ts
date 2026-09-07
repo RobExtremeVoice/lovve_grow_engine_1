@@ -5,11 +5,13 @@ import {
   MESSAGE_JOB_NAME,
   POSTBACK_JOB_NAME,
   FOLLOWUP_JOB_NAME,
+  HEALTHCHECK_JOB_NAME,
   type DmQueueJob,
   type ProcessCommentJob,
   type ProcessMessageJob,
   type ProcessPostbackJob,
   type ProcessFollowUpJob,
+  type ProcessHealthcheckJob,
 } from "./client";
 import { prisma } from "@/lib/db/client";
 import {
@@ -1186,7 +1188,31 @@ async function processMessage(job: Job<ProcessMessageJob>): Promise<void> {
   }
 }
 
+/**
+ * Infrastructure smoke test. Writes one OperationalEvent row so a caller can
+ * confirm the API -> Redis -> worker -> database path end to end. No Instagram
+ * calls, safe in production. See `scripts/smoke-job.ts`.
+ */
+export async function processHealthcheckJob(
+  job: Job<ProcessHealthcheckJob>
+): Promise<void> {
+  const { nonce, enqueuedAt } = job.data;
+  const latencyMs = Date.now() - new Date(enqueuedAt).getTime();
+  await prisma.operationalEvent.create({
+    data: {
+      source: "SYSTEM",
+      level: "INFO",
+      message: `Healthcheck job processed (${nonce})`,
+      payload: { nonce, enqueuedAt, latencyMs, jobId: job.id ?? null },
+    },
+  });
+  console.log(`[DM Worker] Healthcheck job ${nonce} processed in ${latencyMs}ms`);
+}
+
 async function processJob(job: Job<DmQueueJob>): Promise<void> {
+  if (job.name === HEALTHCHECK_JOB_NAME) {
+    return processHealthcheckJob(job as Job<ProcessHealthcheckJob>);
+  }
   if (job.name === POSTBACK_JOB_NAME) {
     return processPostback(job as Job<ProcessPostbackJob>);
   }
@@ -1204,7 +1230,10 @@ async function recordWorkerFailure(
   error: Error
 ) {
   try {
-    const instagramAccountId = job?.data.instagramAccountId;
+    const instagramAccountId =
+      job && "instagramAccountId" in job.data
+        ? job.data.instagramAccountId
+        : undefined;
     const commentId =
       job && "commentId" in job.data ? job.data.commentId : null;
     const account = instagramAccountId
