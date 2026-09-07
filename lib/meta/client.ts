@@ -1,5 +1,14 @@
 import { getMetaGraphApiVersion, requireEnv } from "@/lib/env";
 
+/**
+ * Webhook fields this app subscribes each connected account to. These must also
+ * be subscribed on the Meta app itself (Instagram product → Configure webhooks)
+ * or Meta never delivers them:
+ * - comments — comment-to-DM and public replies
+ * - messages — inbound DMs and Story replies (the DM-keyword trigger)
+ */
+export const WEBHOOK_SUBSCRIBED_FIELDS = ["comments", "messages"] as const;
+
 function instagramGraphBase() {
   return `https://graph.instagram.com/${getMetaGraphApiVersion()}`;
 }
@@ -757,7 +766,7 @@ export async function subscribeInstagramAccountToWebhooks(
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        subscribed_fields: ["comments", "messages"],
+        subscribed_fields: WEBHOOK_SUBSCRIBED_FIELDS,
       }),
     }
   );
