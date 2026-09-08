@@ -5,12 +5,14 @@
  * missing or malformed environment variable. Read-only, no network calls, and
  * never prints a secret value (only whether it is set).
  *
+ *   vercel env pull .env      # pull the deployed Production vars
  *   npm run check:meta
  *
- * Run it with the same environment the deployed web app uses (e.g.
- * `vercel env pull` then `npm run check:meta`, or against your local .env).
+ * Loads .env automatically (same as prisma.config.ts). Values already present
+ * in the real environment win over the file, so this is a no-op in CI / Vercel.
  */
 
+import "dotenv/config";
 import { INSTAGRAM_OAUTH_SCOPES } from "@/lib/meta/oauth";
 import { WEBHOOK_SUBSCRIBED_FIELDS } from "@/lib/meta/client";
 
