@@ -18,10 +18,20 @@ import { WEBHOOK_SUBSCRIBED_FIELDS } from "@/lib/meta/client";
 
 const HEX_64 = /^[a-f0-9]{64}$/i;
 
+// `vercel env pull` writes this in place of any value marked Sensitive. It means
+// the var IS set in Vercel; we just cannot read or validate the value locally.
+const MASKED = "[SENSITIVE]";
+function masked(name: string): boolean {
+  return process.env[name] === MASKED;
+}
+function unmask(value: string | undefined): string | undefined {
+  return value === MASKED ? undefined : value;
+}
+
 function baseUrl(): string {
   return (
-    process.env.APP_BASE_URL?.trim() ||
-    process.env.NEXTAUTH_URL?.trim() ||
+    unmask(process.env.APP_BASE_URL)?.trim() ||
+    unmask(process.env.NEXTAUTH_URL)?.trim() ||
     "http://localhost:3000"
   ).replace(/\/+$/, "");
 }
@@ -64,27 +74,42 @@ check(
 );
 check(
   "ENCRYPTION_KEY",
-  Boolean(process.env.ENCRYPTION_KEY) && HEX_64.test(process.env.ENCRYPTION_KEY ?? ""),
-  HEX_64.test(process.env.ENCRYPTION_KEY ?? "")
-    ? "valid 32-byte hex — Instagram tokens are stored AES-256-GCM encrypted"
-    : "must be exactly 64 hex chars (openssl rand -hex 32)"
+  masked("ENCRYPTION_KEY") ||
+    (Boolean(process.env.ENCRYPTION_KEY) &&
+      HEX_64.test(process.env.ENCRYPTION_KEY ?? "")),
+  masked("ENCRYPTION_KEY")
+    ? "set in Vercel (value masked — can't check the 64-hex format locally)"
+    : HEX_64.test(process.env.ENCRYPTION_KEY ?? "")
+      ? "valid 32-byte hex — Instagram tokens are stored AES-256-GCM encrypted"
+      : "must be exactly 64 hex chars (openssl rand -hex 32)"
 );
-check(
-  "NEXTAUTH_URL",
-  Boolean(process.env.NEXTAUTH_URL) &&
-    /^https?:\/\//.test(process.env.NEXTAUTH_URL ?? ""),
-  process.env.NEXTAUTH_URL
-    ? `= ${process.env.NEXTAUTH_URL}  (must be the canonical public domain — the OAuth redirect is built from it)`
-    : "missing"
-);
+{
+  const nextAuthUrl = unmask(process.env.NEXTAUTH_URL);
+  check(
+    "NEXTAUTH_URL",
+    masked("NEXTAUTH_URL") ||
+      (Boolean(nextAuthUrl) && /^https?:\/\//.test(nextAuthUrl ?? "")),
+    masked("NEXTAUTH_URL")
+      ? "set in Vercel (value masked) — confirm it is the canonical https domain"
+      : nextAuthUrl
+        ? `= ${nextAuthUrl}  (must be the canonical public domain — the OAuth redirect is built from it)`
+        : "missing"
+  );
+}
 check(
   "META_GRAPH_API_VERSION",
   true,
-  `= ${process.env.META_GRAPH_API_VERSION ?? "v25.0 (default)"}`
+  `= ${unmask(process.env.META_GRAPH_API_VERSION) ?? "v25.0 (default)"}`
 );
 
 const b = baseUrl();
-if (b.startsWith("http://")) {
+if (masked("NEXTAUTH_URL") && !unmask(process.env.APP_BASE_URL)) {
+  check(
+    "Public URL",
+    true,
+    "NEXTAUTH_URL is masked — the URLs above show a placeholder; the deployed value should be https://lovve-grow-engine-1.vercel.app"
+  );
+} else if (b.startsWith("http://")) {
   check("Public URL scheme", false, `${b} is not https — Meta requires https for redirect + webhook`);
 }
 
