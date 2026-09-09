@@ -16,6 +16,37 @@ interface HealthCheck {
   detail?: string;
 }
 
+const CHECK_TIMEOUT_MS = 5000;
+
+/**
+ * Bounds a check to CHECK_TIMEOUT_MS. Without this, a misconfigured or
+ * unreachable REDIS_URL/DATABASE_URL doesn't fail fast — ioredis's default
+ * offline queue plus `maxRetriesPerRequest: null` (required by BullMQ) means a
+ * command can wait for a connection indefinitely, and the whole endpoint hangs
+ * until the platform kills the function. That turns the one endpoint meant to
+ * diagnose an outage into a second outage, with no log line pointing at which
+ * dependency is actually stuck. Racing each check against a timeout guarantees
+ * a prompt, actionable response either way.
+ */
+function withTimeout<T extends { status: CheckStatus }>(
+  promise: Promise<T>,
+  label: string
+): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => {
+      setTimeout(
+        () =>
+          resolve({
+            status: "error",
+            detail: `${label} check timed out after ${CHECK_TIMEOUT_MS}ms`,
+          } as unknown as T),
+        CHECK_TIMEOUT_MS
+      );
+    }),
+  ]);
+}
+
 async function checkDatabase(): Promise<HealthCheck> {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -59,15 +90,21 @@ async function checkQueue(): Promise<HealthCheck & { counts?: unknown }> {
 
 export async function GET() {
   const [database, redis, queue, worker] = await Promise.all([
-    checkDatabase(),
-    checkRedis(),
-    checkQueue(),
-    getWorkerHealth().catch((error) => ({
-      healthy: false,
-      heartbeat: null,
-      ageMs: null,
-      error: error instanceof Error ? error.message : "Worker check failed",
-    })),
+    withTimeout(checkDatabase(), "database"),
+    withTimeout(checkRedis(), "redis"),
+    withTimeout(checkQueue(), "queue"),
+    withTimeout(
+      getWorkerHealth()
+        .then((h) => ({ ...h, status: (h.healthy ? "ok" : "error") as CheckStatus }))
+        .catch((error) => ({
+          healthy: false,
+          heartbeat: null,
+          ageMs: null,
+          status: "error" as CheckStatus,
+          error: error instanceof Error ? error.message : "Worker check failed",
+        })),
+      "worker"
+    ),
   ]);
 
   const healthy =

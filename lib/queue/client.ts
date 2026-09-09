@@ -13,6 +13,14 @@ export function getRedisConnection(): Redis {
   if (!connection) {
     connection = new Redis(process.env.REDIS_URL!, {
       maxRetriesPerRequest: null, // Required by BullMQ
+      // Without this, a bad host/port or a TLS scheme mismatch (redis:// against
+      // an Upstash endpoint that requires rediss://) can leave the initial
+      // connection attempt hanging far longer than any caller waits, since
+      // maxRetriesPerRequest: null also means a queued command waits forever
+      // for that connection. Bounding the attempt lets ioredis's retryStrategy
+      // move on and emit an error a caller can actually see. See /api/health's
+      // own per-check timeout for the same failure mode on the caller side.
+      connectTimeout: 10_000,
     });
   }
   return connection;
